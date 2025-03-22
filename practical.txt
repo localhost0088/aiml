@@ -1,0 +1,1455 @@
+
+
+#BFS
+from collections import deque
+
+def bfs(graph, start):
+    visited = set()
+    queue = deque([start])
+    final_sequence = []
+
+    while queue:
+        node = queue.popleft()
+        print(f"Popped: {node}")
+
+        if node not in visited:
+            final_sequence.append(node)
+            visited.add(node)
+            print(f"Added to final sequence: {node}")
+
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    queue.append(neighbor)
+                    print(f"Added to queue: {neighbor}")
+
+    print("\nFinal BFS sequence:", " ".join(final_sequence))
+
+
+graph = {
+    'A': ['B', 'C'],
+    'B': ['D', 'E'],
+    'C': ['F'],
+    'D': [],
+    'E': ['F'],
+    'F': []
+}
+
+bfs(graph, 'A')
+
+# DFS
+def dfs(graph, start):
+    visited = set()
+    stack = [start]
+    final_sequence = []
+
+    while stack:
+        node = stack.pop()
+        print(f"Popped: {node}")
+
+        if node not in visited:
+            final_sequence.append(node)
+            visited.add(node)
+            print(f"Added to final sequence: {node}")
+
+            for neighbor in reversed(graph[node]):
+                if neighbor not in visited:
+                    stack.append(neighbor)
+                    print(f"Added to stack: {neighbor}")
+
+    print("\nFinal DFS sequence:", " ".join(final_sequence))
+
+graph = {
+    'A': ['B', 'C'],
+    'B': ['D', 'E'],
+    'C': ['F'],
+    'D': [],
+    'E': ['F'],
+    'F': []
+}
+
+dfs(graph, 'A')
+
+# Water Jug Problem
+from collections import deque
+
+def water_jug_solver(CA, CB, T):
+
+    path = []
+    visited = set()
+    q = deque([(0, 0, None, None)])
+
+    while q:
+        a, b, prev_action, from_jug = q.popleft()
+
+        if (a, b) in visited:
+            continue
+
+        visited.add((a, b))
+        path.append((prev_action, from_jug, None, a, b))
+
+        if a == T or b == T:
+            return path
+
+        q.append((CA, b, "Fill", "A"))
+        q.append((a, CB, "Fill", "B"))
+        q.append((0, b, "Empty", "A"))
+        q.append((a, 0, "Empty", "B"))
+
+        pour_into_B = min(a, CB - b)
+        q.append((a - pour_into_B, b + pour_into_B, "Pour", "A"))
+
+        pour_into_A = min(b, CA - a)
+        q.append((a + pour_into_A, b - pour_into_A, "Pour", "B"))
+
+    return "No solution found."
+
+CA = 4
+CB = 3
+T = 2
+
+result = water_jug_solver(CA, CB, T)
+
+if result == "No solution found.":
+    print(result)
+else:
+    print("Steps to reach the target volume:")
+    for step in result:
+        action, from_jug, to_jug, a, b = step
+        if action == "Fill":
+            print(f"Fill {from_jug} jug. Jug A: {a}, Jug B: {b}")
+        elif action == "Empty":
+            print(f"Empty {from_jug} jug. Jug A: {a}, Jug B: {b}")
+        elif action == "Pour":
+            print(f"Pour water from {from_jug} jug to B jug. Jug A: {a}, Jug B: {b}")
+        else:
+            print(f"Initial state. Jug A: {a}, Jug B: {b}")
+
+#best first search
+from queue import PriorityQueue
+
+def best_first_search(graph, start, goal):
+    visited = set()
+    pq = PriorityQueue()
+    pq.put((0, start))
+    print(f"Initial state: Priority Queue: {pq.queue}")
+
+    while not pq.empty():
+        priority, current_node = pq.get()
+        if current_node in visited:
+            continue
+
+        visited.add(current_node)
+        print(f"Current Node: {current_node}, Visited: {visited}, Priority Queue: {pq.queue}")
+
+        if current_node == goal:
+            print("\nGoal reached!")
+            return
+
+        for neighbor, cost in graph[current_node]:
+            if neighbor not in visited:
+                pq.put((cost, neighbor))
+                print(f"Added {neighbor} to Priority Queue: {pq.queue}")
+
+    print("\nGoal not reachable.")
+    return
+
+# Example graph
+graph = {
+    'A': [('B', 1), ('C', 4), ('D', 3)],
+    'B': [('E', 4)],
+    'C': [('E', 2), ('F', 5)],
+    'D': [('F', 6)],
+    'E': [('G', 2)],
+    'F': [('G', 1)],
+    'G': []
+}
+
+start = 'A'
+goal = 'G'
+print(f"Best First Search starting from {start} to {goal}:")
+best_first_search(graph, start, goal)
+
+#Missionaries and Cannibals
+def is_valid(state):
+    m_left, c_left, boat, m_right, c_right = state
+    if m_left < 0 or c_left < 0 or m_right < 0 or c_right < 0:
+        return False
+    if m_left > 0 and m_left < c_left:
+        return False
+    if m_right > 0 and m_right < c_right:
+        return False
+    return True
+
+def get_successors(state):
+    m_left, c_left, boat, m_right, c_right = state
+    successors = []
+    if boat == 'left':
+        moves = [(-2, 0), (0, -2), (-1, -1), (-1, 0), (0, -1)]
+    else:
+        moves = [(2, 0), (0, 2), (1, 1), (1, 0), (0, 1)]
+
+    for m_move, c_move in moves:
+        new_state = (m_left + m_move, c_left + c_move, 'right' if boat == 'left' else 'left',m_right - m_move, c_right - c_move)
+        if is_valid(new_state):
+            successors.append(new_state)
+    return successors
+
+def bfs(start_state, goal_state):
+    queue = [(start_state, [start_state])]
+    while queue:
+        current_state, path = queue.pop(0)
+        if current_state == goal_state:
+            return path
+        for successor in get_successors(current_state):
+            if successor not in path:
+                queue.append((successor, path + [successor]))
+    return None
+
+start_state = (3, 3, 'left', 0, 0)
+goal_state = (0, 0, 'right', 3, 3)
+solution = bfs(start_state, goal_state)
+
+if solution:
+    print("Solution found:")
+    for step in solution:
+        print(step)
+else:
+    print("No solution found.")
+
+#A*
+
+from heapq import heappop, heappush
+
+class Node:
+    def __init__(self, value, g=0, h=0):
+        self.value = value
+        self.g = g
+        self.h = h
+        self.f = g + h
+
+def a_star(graph, start, goal, heuristic):
+    open_list = [(start.f, start)]
+    closed_list = set()
+
+    while open_list:
+        current_f, current = heappop(open_list)
+        print(f"OPEN: {[n.value for _, n in open_list]}, Visiting: {current.value}")
+
+        if current.value == goal:
+            return f"Goal node {goal} found!"
+
+        closed_list.add(current.value)
+
+        for neighbor, cost in graph[current.value].items():
+            if neighbor in closed_list:
+                continue
+
+            g = current.g + cost
+            h = heuristic[neighbor]
+            neighbor_node = Node(neighbor, g, h)
+
+            if not any(n.value == neighbor and n.f <= neighbor_node.f for _, n in open_list):
+                heappush(open_list, (neighbor_node.f, neighbor_node))
+
+        if not open_list:
+            return f"Goal node {goal} not found!"
+
+    return f"Goal node {goal} not found!"
+
+graph = {'A': {'B': 1, 'C': 4}, 'B': {'D': 1, 'E': 4}, 'C': {'F': 5}, 'D': {}, 'E': {}, 'F': {}}
+heuristic = {'A': 7, 'B': 6, 'C': 2, 'D': 1, 'E': 6, 'F': 0}
+
+start_node = Node('A', 0, heuristic['A'])
+
+goal_node_value = 'F'
+
+result = a_star(graph, start_node, goal_node_value, heuristic)
+print(result)
+
+
+
+#Q1 scatter plot on iris
+import pandas as pd
+import matplotlib.pyplot as plt
+iris_data = pd.read_csv("/home/fymsc8/MLDatasets/Iris.csv")
+print(iris_data.head())
+x = iris_data['SepalLengthCm']
+y = iris_data['SepalWidthCm']
+species = iris_data['Species']
+plt.figure(figsize=(10, 6))
+for sp in species.unique():
+    sp_data = iris_data[species == sp]
+    plt.scatter(sp_data['SepalLengthCm'], sp_data['SepalWidthCm'], label=sp)
+plt.title('Scatter Plot of Iris Dataset')
+plt.xlabel('Sepal Length (cm)')
+plt.ylabel('Sepal Width (cm)')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+#Q2 find null values and replace with mean
+import pandas as pd
+from sklearn.impute import SimpleImputer
+iris_data = pd.read_csv("/home/fymsc8/MLDatasets/Iris.csv")
+print("Original Data:")
+print(iris_data.head())
+print("\nNull values in each column before imputation:")
+print(iris_data.isnull().sum())
+
+total_null_values = iris_data.isnull().sum().sum()
+print("\nTotal number of null values in the dataset:", total_null_values)
+
+imputer = SimpleImputer(strategy='mean')
+iris_data_imputed = pd.DataFrame(imputer.fit_transform(iris_data.iloc[:, :-1]), columns=iris_data.columns[:-1])
+iris_data_imputed['Species'] = iris_data['Species']
+print("\nData after imputation:")
+print(iris_data_imputed.head())
+print("\nNull values in each column after imputation:")
+print(iris_data_imputed.isnull().sum())
+
+#Q3 convert categorical values to numeric format in a given dataset using label encoding and one hot encoder
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+iris_data = pd.read_csv("/home/fymsc8/MLDatasets/Iris.csv")
+print("Original Data:")
+print(iris_data.head())
+label_encoder = LabelEncoder()
+iris_data['Species_Label'] = label_encoder.fit_transform(iris_data['Species'])
+print("\nData with Label Encoded Species:")
+print(iris_data.head())
+onehot_encoder = OneHotEncoder(sparse=False)
+species_onehot = onehot_encoder.fit_transform(iris_data[['Species']])
+species_onehot_df = pd.DataFrame(species_onehot, columns=onehot_encoder.get_feature_names_out(['Species']))
+iris_data = pd.concat([iris_data, species_onehot_df], axis=1)
+print("\nData with One-Hot Encoded Species:")
+print(iris_data.head())
+
+#Q4 scale values
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.impute import SimpleImputer
+
+# Load the dataset
+salary_data = pd.read_csv("/home/fymsc8/MLDatasets/Salary_Data.csv")
+
+print("Original Data:")
+print(salary_data.head())
+
+imputer = SimpleImputer(strategy="mean")
+salary_data[['Salary']] = imputer.fit_transform(salary_data[['Salary']])
+
+categorical_columns = salary_data.select_dtypes(include=['object']).columns
+label_encoders = {}
+
+for col in categorical_columns:
+    label_encoders[col] = LabelEncoder()
+    salary_data[col] = label_encoders[col].fit_transform(salary_data[col])
+
+features = salary_data.drop('Salary', axis=1)
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+
+scaled_features_df = pd.DataFrame(scaled_features, columns=features.columns)
+
+scaled_salary_data = pd.concat([scaled_features_df, salary_data['Salary']], axis=1)
+
+print("\nScaled Data:")
+print(scaled_salary_data.head())
+
+#Set B
+#1 split data into training and test set
+import pandas as pd
+from sklearn.model_selection import train_test_split
+iris_data = pd.read_csv("/home/fymsc8/MLDatasets/Iris.csv")
+print("Original Data:")
+print(iris_data.head())
+X = iris_data.drop('Species', axis=1)
+y = iris_data['Species']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print("\nTraining set shape:", X_train.shape, y_train.shape)
+print("Test set shape:", X_test.shape, y_test.shape)
+print("\nTraining set:")
+print(X_train.head(), y_train.head())
+print("\nTest set:")
+print(X_test.head(), y_test.head())
+
+#Set B
+# 2 scale features using standardization
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+data = pd.read_csv("/home/fymsc8/MLDatasets/Dataset7.csv")
+print("Original Data:")
+print(data.head())
+features = data.drop('Target', axis=1, errors='ignore')
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+scaled_features_df = pd.DataFrame(scaled_features, columns=features.columns)
+if 'Target' in data.columns:
+    scaled_data = pd.concat([scaled_features_df, data['Target']], axis=1)
+else:
+    scaled_data = scaled_features_df
+print("Scaled Data:")
+print(scaled_data.head())
+
+
+
+#SetA
+#Q1 i simple linear regression
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load the dataset
+dataset = pd.read_csv('/home/fymsc8/MLDatasets/House_price_prediction.csv')
+
+X = dataset['sqft_living'].values.reshape(-1, 1)
+y = dataset['price'].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("Mean Squared Error:", mse)
+print("R^2 Score:", r2)
+
+plt.scatter(X_train, y_train, color='blue')
+plt.plot(X_train, model.predict(X_train), color='red')
+plt.title('House Price Prediction (Training set)')
+plt.xlabel('sqft_living')
+plt.ylabel('Price')
+plt.show()
+
+plt.scatter(X_test, y_test, color='blue')
+plt.plot(X_train, model.predict(X_train), color='red')
+plt.title('House Price Prediction (Test set)')
+plt.xlabel('sqft_living')
+plt.ylabel('Price')
+plt.show()
+
+#Q1
+# ii multiple linear regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load the dataset
+dataset = pd.read_csv('/home/fymsc8/MLDatasets/House_price_prediction.csv')
+
+X = dataset[['yr_built', 'floors', 'sqft_living']].values
+y = dataset['price'].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("Mean Squared Error:", mse)
+print("R^2 Score:", r2)
+
+plt.scatter(y_test, y_pred, color='blue')
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red')
+plt.title('House Price Prediction (Test set)')
+plt.xlabel('Actual Price')
+plt.ylabel('Predicted Price')
+plt.show()
+
+# Q2 polynomial regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import mean_squared_error
+
+# Load the dataset
+data = pd.read_csv("/home/fymsc8/MLDatasets/Position_Salaries1.csv")
+
+X = data.iloc[:, 1:2].values
+y = data.iloc[:, 2].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+poly_reg = PolynomialFeatures(degree=4)
+X_poly = poly_reg.fit_transform(X)
+
+lin_reg = LinearRegression()
+lin_reg.fit(X_poly, y)
+
+plt.scatter(X, y, color='red')
+plt.plot(X, lin_reg.predict(poly_reg.fit_transform(X)), color='blue')
+plt.title('Polynomial Regression')
+plt.xlabel('Position level')
+plt.ylabel('Salary')
+plt.show()
+
+position_level = 6.5
+salary_pred = lin_reg.predict(poly_reg.fit_transform([[position_level]]))
+print("Predicted Salary for Position Level {}: ${}".format(position_level, salary_pred[0]))
+
+y_pred = lin_reg.predict(poly_reg.fit_transform(X_test))
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
+
+#Q3 decision tree regression and support vector regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor, plot_tree
+from sklearn.svm import SVR
+
+# Load the dataset
+dataset = pd.read_csv("/home/fymsc8/MLDatasets/Position_Salaries1.csv")
+
+X = dataset.iloc[:, 1:2].values
+y = dataset.iloc[:, 2].values
+
+sc_X = StandardScaler()
+sc_y = StandardScaler()
+X = sc_X.fit_transform(X)
+y = sc_y.fit_transform(y.reshape(-1, 1)).reshape(-1)
+
+regressor_dt = DecisionTreeRegressor(random_state=0)
+regressor_dt.fit(X, y)
+
+regressor_svr = SVR(kernel='poly')
+regressor_svr.fit(X, y)
+
+plt.figure(figsize=(10,6))
+plot_tree(regressor_dt, filled=True, feature_names=['Position level'], fontsize=10)
+plt.title('Decision Tree Structure')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='red')
+plt.plot(X, regressor_svr.predict(X), color='blue')
+plt.title('SVR with Polynomial Kernel')
+plt.xlabel('Position level')
+plt.ylabel('Salary')
+plt.show()
+
+#Set B
+#Q1 simple linear regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load the dataset
+dataset = pd.read_csv("/home/fymsc8/MLDatasets/StudentHoursScores.csv")
+
+X = dataset['Hours'].values.reshape(-1, 1)
+y = dataset['Scores'].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("Mean Squared Error:", mse)
+print("R^2 Score:", r2)
+
+plt.scatter(X_test, y_test, color='blue')
+plt.plot(X_test, y_pred, color='red')
+plt.title('Student Scores vs Study Hours')
+plt.xlabel('Study Hours')
+plt.ylabel('Scores')
+plt.show()
+
+# Set B
+# Q2 prediction model using multiple linear regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load the dataset
+dataset = pd.read_csv('/home/fymsc8/MLDatasets/50_Startups.csv')
+
+X = dataset[['Administration', 'State', 'Marketing Spend', 'R&D Spend']]
+y = dataset['Profit']
+
+X = pd.get_dummies(X, drop_first=True)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("Mean Squared Error:", mse)
+print("R^2 Score:", r2)
+
+plt.figure(figsize=(10, 6))
+
+plt.scatter(y_test, y_pred, color='blue')
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
+
+plt.title('Actual vs Predicted Profit')
+plt.xlabel('Actual Profit')
+plt.ylabel('Predicted Profit')
+plt.show()
+
+# Q3
+# 1 linear regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+
+dataset = pd.read_csv('/home/fymsc8/MLDatasets/Position_Salaries1.csv')
+
+X = dataset.iloc[:, 1:2].values
+y = dataset.iloc[:, 2].values
+
+model = LinearRegression()
+model.fit(X, y)
+
+y_pred = model.predict(X)
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='blue', label='Actual Data')
+plt.plot(X, y_pred, color='red', label='Regression Line')
+plt.title('Simple Linear Regression Fit')
+plt.xlabel('Position Level')
+plt.ylabel('Salary')
+plt.legend()
+plt.show()
+
+#Q2 polynomial regression
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+# Load the dataset
+dataset = pd.read_csv('/home/fymsc8/MLDatasets/Position_Salaries1.csv')
+
+X = dataset.iloc[:, 1:2].values
+y = dataset.iloc[:, 2].values
+
+poly_reg = PolynomialFeatures(degree=4)
+X_poly = poly_reg.fit_transform(X)
+
+model_poly = LinearRegression()
+model_poly.fit(X_poly, y)
+
+y_pred_poly = model_poly.predict(X_poly)
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='blue', label='Actual Data')
+plt.plot(X, y_pred_poly, color='red', label='Polynomial Regression Line')
+plt.title('Polynomial Regression Fit')
+plt.xlabel('Position Level')
+plt.ylabel('Salary')
+plt.legend()
+plt.show()
+
+
+
+#Set A
+#Q1(1) GaussianNB
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load the dataset
+df = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Social_Network_Ads.csv")
+
+print(df)
+
+X = df.iloc[:, [2, 3]].values
+y = df.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+classifier = GaussianNB()
+classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("Accuracy:", accuracy*100,"%")
+
+print(f"Correctly predicted 'Not Purchased': {cm[0][0]}")
+print(f"Correctly predicted 'Purchased': {cm[1][1]}")
+print(f"Incorrectly predicted as 'Purchased' when they weren't: {cm[0][1]}")
+print(f"Incorrectly predicted as 'Not Purchased' when they were: {cm[1][0]}")
+
+def plot_decision_boundary(X, y, model, title):
+    from matplotlib.colors import ListedColormap
+    X_set, y_set = X, y
+    X1, X2 = np.meshgrid(np.arange(X_set[:, 0].min() - 1, X_set[:, 0].max() + 1, 0.01),
+                         np.arange(X_set[:, 1].min() - 1, X_set[:, 1].max() + 1, 0.01))
+    plt.contourf(X1, X2, model.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+                 alpha=0.75, cmap=ListedColormap(('red', 'blue')))
+    plt.xlim(X1.min(), X1.max())
+    plt.ylim(X2.min(), X2.max())
+    for i, j in enumerate(np.unique(y_set)):
+        plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                    c=[ListedColormap(('red', 'blue'))(i)], label=j)
+    plt.title(title)
+    plt.xlabel('Age')
+    plt.ylabel('Estimated Salary')
+    plt.legend()
+    plt.show()
+
+plot_decision_boundary(X_train, y_train, classifier, 'Naïve Bayes (Training set)')
+
+plot_decision_boundary(X_test, y_test, classifier, 'Naïve Bayes (Test set)')
+
+#Set A
+#Q1(1) Bernoulli
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, Binarizer
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load the dataset
+df = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Social_Network_Ads.csv")
+
+X = df.iloc[:, [2, 3]].values
+y = df.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+binarizer = Binarizer(threshold=0.0)
+X_train_binarized = binarizer.fit_transform(X_train)
+X_test_binarized = binarizer.transform(X_test)
+
+classifier = BernoulliNB()
+classifier.fit(X_train_binarized, y_train)
+
+y_pred = classifier.predict(X_test_binarized)
+
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("Accuracy:", accuracy*100, "%")
+
+print(f"Correctly predicted 'Not Purchased': {cm[0][0]}")
+print(f"Correctly predicted 'Purchased': {cm[1][1]}")
+print(f"Incorrectly predicted as 'Purchased' when they weren't: {cm[0][1]}")
+print(f"Incorrectly predicted as 'Not Purchased' when they were: {cm[1][0]}")
+
+def plot_decision_boundary(X, y, model, title):
+    from matplotlib.colors import ListedColormap
+    X_set, y_set = X, y
+    X1, X2 = np.meshgrid(np.arange(X_set[:, 0].min() - 1, X_set[:, 0].max() + 1, 0.01),
+                         np.arange(X_set[:, 1].min() - 1, X_set[:, 1].max() + 1, 0.01))
+    plt.contourf(X1, X2, model.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+                 alpha=0.75, cmap=ListedColormap(('red', 'blue')))
+    plt.xlim(X1.min(), X1.max())
+    plt.ylim(X2.min(), X2.max())
+    for i, j in enumerate(np.unique(y_set)):
+        plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                    c=[ListedColormap(('red', 'blue'))(i)], label=j)
+    plt.title(title)
+    plt.xlabel('Age')
+    plt.ylabel('Estimated Salary')
+    plt.legend()
+    plt.show()
+
+plot_decision_boundary(X_train_binarized, y_train, classifier, 'Bernoulli Naïve Bayes (Training set)')
+
+plot_decision_boundary(X_test_binarized, y_test, classifier, 'Bernoulli Naïve Bayes (Test set)')
+
+#Set A
+#Q1(1) Multinomial
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load the dataset
+df = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Social_Network_Ads.csv")
+
+X = df.iloc[:, [2, 3]].values
+y = df.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+discretizer = KBinsDiscretizer(n_bins=10, encode='ordinal', strategy='uniform')
+X_train_binned = discretizer.fit_transform(X_train)
+X_test_binned = discretizer.transform(X_test)
+
+classifier = MultinomialNB()
+classifier.fit(X_train_binned, y_train)
+
+y_pred = classifier.predict(X_test_binned)
+
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("Accuracy:", accuracy * 100, "%")
+
+print(f"Correctly predicted 'Not Purchased': {cm[0][0]}")
+print(f"Correctly predicted 'Purchased': {cm[1][1]}")
+print(f"Incorrectly predicted as 'Purchased' when they weren't: {cm[0][1]}")
+print(f"Incorrectly predicted as 'Not Purchased' when they were: {cm[1][0]}")
+
+def plot_decision_boundary(X, y, model, title):
+    from matplotlib.colors import ListedColormap
+    X_set, y_set = X, y
+    X1, X2 = np.meshgrid(np.arange(X_set[:, 0].min() - 1, X_set[:, 0].max() + 1, 0.1),
+                         np.arange(X_set[:, 1].min() - 1, X_set[:, 1].max() + 1, 0.1))
+    plt.contourf(X1, X2, model.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+                 alpha=0.75, cmap=ListedColormap(('red', 'blue')))
+    plt.xlim(X1.min(), X1.max())
+    plt.ylim(X2.min(), X2.max())
+    for i, j in enumerate(np.unique(y_set)):
+        plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                    c=[ListedColormap(('red', 'blue'))(i)], label=j)
+    plt.title(title)
+    plt.xlabel('Age')
+    plt.ylabel('Estimated Salary')
+    plt.legend()
+    plt.show()
+
+plot_decision_boundary(X_train_binned, y_train, classifier, 'Multinomial Naïve Bayes (Training set)')
+
+plot_decision_boundary(X_test_binned, y_test, classifier, 'Multinomial Naïve Bayes (Test set)')
+
+#Set A
+#Q1(2) random forest
+import pandas as pd
+import numpy as np
+from sklearn.tree import plot_tree
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+df = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Social_Network_Ads.csv")
+
+print(df.head())
+
+X = df.iloc[:, [2, 3]].values
+y = df.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("Accuracy:", accuracy*100,"%")
+
+print(f"Correctly predicted 'Not Purchased': {cm[0][0]}")
+print(f"Correctly predicted 'Purchased': {cm[1][1]}")
+print(f"Incorrectly predicted as 'Purchased' when they weren't: {cm[0][1]}")
+print(f"Incorrectly predicted as 'Not Purchased' when they were: {cm[1][0]}")
+
+#Set A
+#Q1(3) kernel svm
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+df = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Social_Network_Ads.csv")
+
+print(df.head())
+
+X = df.iloc[:, [2, 3]].values
+y = df.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+classifier = SVC(kernel='rbf', random_state=42)
+classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+print("Accuracy:", accuracy*100,"%")
+
+print(f"Correctly predicted 'Not Purchased': {cm[0][0]}")
+print(f"Correctly predicted 'Purchased': {cm[1][1]}")
+print(f"Incorrectly predicted as 'Purchased' when they weren't: {cm[0][1]}")
+print(f"Incorrectly predicted as 'Not Purchased' when they were: {cm[1][0]}")
+
+#Tennis
+
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load dataset
+df = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Tennis.csv")
+print(df)
+
+df.rename(columns={"Play Tennis": "PlayTennis"}, inplace=True)
+
+label_encoders = {}
+for column in df.columns[:-1]:
+    le = LabelEncoder()
+    df[column] = le.fit_transform(df[column])
+    label_encoders[column] = le
+
+target_encoder = LabelEncoder()
+df["PlayTennis"] = target_encoder.fit_transform(df["PlayTennis"])
+
+X = df.iloc[:, :-1]
+y = df.iloc[:, -1]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+classifier = DecisionTreeClassifier(criterion="entropy", random_state=42)
+classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nAccuracy:", round(accuracy * 100, 2), "%")
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(12, 8))
+plot_tree(classifier, feature_names=X.columns, class_names=target_encoder.classes_, filled=True)
+plt.title("Decision Tree for Playing Tennis")
+plt.show()
+
+# Ask questions based on the dataset columns
+def get_user_input():
+    print("\nAnswer the following questions to predict whether to play tennis or not:")
+    outlook = input("Outlook (Sunny/Overcast/Rainy): ").capitalize()
+    temperature = input("Temperature (Hot/Mild/Cool): ").capitalize()
+    humidity = input("Humidity (High/Low): ").capitalize()
+    wind = input("Wind (Weak/Strong): ").capitalize()
+
+    try:
+        outlook_encoded = label_encoders['Outlook'].transform([outlook])[0]
+        temperature_encoded = label_encoders['Temperature'].transform([temperature])[0]
+        humidity_encoded = label_encoders['Humidity'].transform([humidity])[0]
+        wind_encoded = label_encoders['Wind'].transform([wind])[0]
+    except ValueError as e:
+        print(f"Error: {e}")
+        print("Please ensure the values are correct (e.g., 'Sunny', 'Hot', 'High', 'Weak').")
+        return None
+
+    return [outlook_encoded, temperature_encoded, humidity_encoded, wind_encoded]
+
+user_input = get_user_input()
+if user_input:
+    user_input_df = pd.DataFrame([user_input], columns=X.columns)
+
+    prediction = classifier.predict(user_input_df)
+    prediction_label = target_encoder.inverse_transform(prediction)
+
+    print(f"\nPrediction: {'Play' if prediction_label[0] == 1 else 'play'} tennis.")
+
+#Set A
+#Q3 k-nearest neighbour
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+# Load dataset
+dataset = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/Social_Network_Ads.csv")
+print(dataset)
+
+X = dataset.iloc[:, [2, 3]].values
+y = dataset.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+knn = KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2)
+knn.fit(X_train, y_train)
+
+y_pred = knn.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy*100,"%")
+
+print("Confusion Matrix:")
+print(cm)
+print("Accuracy:", accuracy*100,"%")
+
+def plot_decision_boundary(X_set, y_set, model, title):
+    from matplotlib.colors import ListedColormap
+    X1, X2 = np.meshgrid(np.arange(start=X_set[:, 0].min()-1, stop=X_set[:, 0].max()+1, step=0.01),
+                         np.arange(start=X_set[:, 1].min()-1, stop=X_set[:, 1].max()+1, step=0.01))
+
+    plt.contourf(X1, X2, model.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+                 alpha=0.5, cmap=ListedColormap(('red', 'green')))
+
+    plt.scatter(X_set[:, 0], X_set[:, 1], c=y_set, cmap=ListedColormap(('red', 'green')))
+    plt.title(title)
+    plt.xlabel('Age')
+    plt.ylabel('Estimated Salary')
+    plt.show()
+
+plot_decision_boundary(X_train, y_train, knn, "KNN Decision Boundary (Training Set)")
+
+plot_decision_boundary(X_test, y_test, knn, "KNN Decision Boundary (Test Set)")
+
+#Set B
+#Q1 k-nearest neighbour suv
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score
+
+# Load dataset
+dataset = pd.read_csv("/home/fymsc8/Ass4_MLDatasets/User_Data.csv")
+
+X = dataset.iloc[:, [2, 3]].values
+y = dataset.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+knn = KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2)
+knn.fit(X_train, y_train)
+
+y_pred = knn.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(cm)
+
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+
+print("\nModel Performance:")
+print(f"Accuracy: ",accuracy*100,"%")
+print(f"Precision: ",precision*100,"%")
+
+from matplotlib.colors import ListedColormap
+
+X_set, y_set = X_test, y_test
+X1, X2 = np.meshgrid(np.arange(start=X_set[:, 0].min() - 1, stop=X_set[:, 0].max() + 1, step=0.01),
+                     np.arange(start=X_set[:, 1].min() - 1, stop=X_set[:, 1].max() + 1, step=0.01))
+
+plt.figure(figsize=(10,6))
+plt.contourf(X1, X2, knn.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+             alpha=0.75, cmap=ListedColormap(('blue', 'red')))
+
+plt.scatter(X_set[:, 0], X_set[:, 1], c=y_set, cmap=ListedColormap(('blue', 'red')), edgecolors='k')
+plt.title("K-Nearest Neighbors Classification")
+plt.xlabel("Age (Scaled)")
+plt.ylabel("Estimated Salary (Scaled)")
+plt.colorbar()
+plt.show()
+
+age = int(input("Enter Age: "))
+salary = int(input("Enter Estimated Salary: "))
+
+user_data = scaler.transform([[age, salary]])
+
+prediction = knn.predict(user_data)
+
+if prediction[0] == 1:
+    print("\nPrediction: YES! The person is likely to buy an SUV ")
+else:
+    print("\nPrediction: NO! The person is NOT likely to buy an SUV")
+
+
+
+#Set A
+#Q1 k-means
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+from sklearn.preprocessing import MinMaxScaler
+
+def generate_data(n_samples=300, random_state=42):
+    X, y = make_blobs(n_samples=n_samples, n_features=6, centers=3, random_state=random_state)
+    scaler = MinMaxScaler(feature_range=(10, 150))
+    X = scaler.fit_transform(X)
+    df = pd.DataFrame(X, columns=["Annual_Income", "Spending_Score", "Age", "Savings", "Debt", "Credit_Score"])
+    df["Customer_Segment"] = y
+    return df
+
+def apply_kmeans(X, n_clusters=3):
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    kmeans.fit(X)
+    return kmeans.labels_, kmeans.cluster_centers_
+
+def plot_clusters(X, labels, centers):
+    plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', marker='o', edgecolors='k')
+    plt.scatter(centers[:, 0], centers[:, 1], c='red', marker='X', s=200, label='Centroids')
+    plt.title('Customer Segmentation using K-Means')
+    plt.xlabel('Annual Income (in $1000s)')
+    plt.ylabel('Spending Score')
+    plt.legend()
+    plt.show()
+
+dataset = generate_data()
+print(dataset.head())
+
+labels, centers = apply_kmeans(dataset.iloc[:, :-1].values)
+
+plot_clusters(dataset.iloc[:, [0, 1]].values, labels, centers[:, :2])
+
+#Set A
+#Q2 agglomerative clustering
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.datasets import make_blobs
+from sklearn.preprocessing import MinMaxScaler
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+def generate_data(n_samples=1000, random_state=42):
+    X, y = make_blobs(n_samples=n_samples, n_features=6, centers=3, random_state=random_state)
+    scaler = MinMaxScaler(feature_range=(10, 15))
+    X = scaler.fit_transform(X)
+    df = pd.DataFrame(X, columns=["Annual_Income", "Spending_Score", "Age", "Savings", "Debt", "Credit_Score"])
+    df["Customer_Segment"] = y
+    return df
+
+def apply_agglomerative_clustering(X, n_clusters=3):
+    agglo = AgglomerativeClustering(n_clusters=n_clusters)
+    labels = agglo.fit_predict(X)
+    return labels
+
+def plot_clusters(X, labels):
+    plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', marker='o', edgecolors='k')
+    plt.title('Customer Segmentation using Agglomerative Clustering')
+    plt.xlabel('Annual Income (in $1000s)')
+    plt.ylabel('Spending Score')
+    plt.show()
+
+def plot_dendrogram(X):
+    linked = linkage(X, method='ward')
+    plt.figure(figsize=(10, 8))
+    dendrogram(linked)
+    plt.title('Hierarchical Clustering Dendrogram')
+    plt.xlabel('Data Points')
+    plt.ylabel('Euclidean Distance')
+    plt.show()
+
+dataset = generate_data()
+print(dataset.head())
+
+labels_agglo = apply_agglomerative_clustering(dataset.iloc[:, :-1].values)
+plot_clusters(dataset.iloc[:, [0, 1]].values, labels_agglo)
+
+plot_dendrogram(dataset.iloc[:, :-1].values)
+
+#Set B
+#Q1 optimal no of clusters using elbow and apply k-means
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+df = pd.read_csv("/home/fymsc8/MLDatasets/Mall_Customers.csv")
+print(df.head())
+
+X = df.iloc[:, [3, 4]].values
+
+wcss = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+
+plt.figure(figsize=(8, 5))
+plt.plot(range(1, 11), wcss, marker='o', linestyle='--')
+plt.xlabel("Number of Clusters (k)")
+plt.ylabel("WCSS (Within-Cluster Sum of Squares)")
+plt.title("Elbow Method for Optimal k")
+plt.show()
+
+optimal_k = np.argmax(np.diff(wcss, 2)) + 2
+print(f"The optimal number of clusters is: {optimal_k}")
+
+optimal_k = 3
+
+kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
+df["Cluster"] = kmeans.fit_predict(X)
+
+plt.figure(figsize=(8, 5))
+for i in range(optimal_k):
+    plt.scatter(X[df["Cluster"] == i, 0], X[df["Cluster"] == i, 1], label=f'Cluster {i}')
+
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=200, c='red', marker='X', label='Centroids')
+plt.xlabel("Annual Income (k$)")
+plt.ylabel("Spending Score (1-100)")
+plt.title("Customer Segmentation using K-Means")
+plt.legend()
+plt.show()
+
+#Set B
+#Q2 agglomerative clustering and show clusters
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+
+df = pd.read_csv("/home/fymsc8/MLDatasets/penguins.csv")
+print(df.head())
+
+df_filtered = df[['flipper_length_mm', 'body_mass_g']].dropna().copy()
+X = df_filtered.values
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+linked = linkage(X_scaled, method='ward')
+
+plt.figure(figsize=(10, 6))
+dendrogram(linked)
+plt.title('Dendrogram for Agglomerative Clustering')
+plt.xlabel('Data Points')
+plt.ylabel('Euclidean Distance')
+plt.show()
+
+threshold = 8
+
+clusters = fcluster(linked, threshold, criterion='distance')
+
+optimal_clusters = len(np.unique(clusters))
+print(f"The optimal number of clusters is: {optimal_clusters}")
+
+agglo = AgglomerativeClustering(n_clusters=optimal_clusters)
+df_filtered["clusters"] = agglo.fit_predict(X_scaled)
+
+plt.figure(figsize=(8, 5))
+for cluster in range(optimal_clusters):
+    plt.scatter(X[df_filtered["clusters"] == cluster, 0],
+                X[df_filtered["clusters"] == cluster, 1], label=f'Cluster {cluster}')
+
+plt.xlabel("Flipper Length (mm)")
+plt.ylabel("Body Mass (g)")
+plt.title("Penguin Clusters using Agglomerative Clustering")
+plt.legend()
+plt.show()
+
+#Apriori
+import pandas as pd
+import numpy as np
+from mlxtend.frequent_patterns import apriori, association_rules
+
+np.random.seed(42)
+items = ["Milk", "Bread", "Butter", "Cheese", "Eggs", "Fruits", "Vegetables"]
+n_transactions = 100
+
+data = np.random.choice([True, False], size=(n_transactions, len(items)), p=[0.4, 0.6])
+df = pd.DataFrame(data, columns=items)
+
+frequent_itemsets = apriori(df, min_support=0.2, use_colnames=True)
+rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
+
+print("\nGenerated Basket Data:\n", df.head())
+print("\nFrequent Itemsets:\n", frequent_itemsets)
+print("\nAssociation Rules:\n", rules)
+
+item1 = input("Enter first item: ")
+item2 = input("Enter second item: ")
+
+if {item1, item2}.issubset(set(df.columns)):
+    total_transactions = len(df)
+    both_chosen = df[(df[item1] == True) & (df[item2] == True)].shape[0]
+    probability = both_chosen / total_transactions
+    print(f"\nProbability of both {item1} and {item2} being chosen together: {probability:.2f}")
+else:
+    print("\nInvalid items entered! Please choose from:", items)
+
+#fpgrowth
+import pandas as pd
+import numpy as np
+from mlxtend.frequent_patterns import fpgrowth, association_rules
+
+np.random.seed(42)
+items = ["Milk", "Bread", "Butter", "Cheese", "Eggs", "Fruits", "Vegetables"]
+n_transactions = 100
+
+data = np.random.choice([True, False], size=(n_transactions, len(items)), p=[0.4, 0.6])
+df = pd.DataFrame(data, columns=items)
+
+frequent_itemsets = fpgrowth(df, min_support=0.2, use_colnames=True)
+rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
+
+print("\nGenerated Basket Data:\n", df.head())
+print("\nFrequent Itemsets:\n", frequent_itemsets)
+print("\nAssociation Rules:\n", rules)
+
+import random
+
+items = ["Milk", "Bread", "Butter", "Cheese", "Eggs", "Fruits", "Vegetables"]
+n_transactions = 100
+
+transactions = []
+for _ in range(n_transactions):
+    transaction = random.sample(items, random.randint(1, len(items)))
+    transactions.append(transaction)
+
+print("Generated Transactions:")
+for transaction in transactions[:5]:
+    print(transaction)
+
+#eclat
+import random
+from collections import defaultdict
+
+items = ["Milk", "Bread", "Butter", "Cheese", "Eggs"]
+n_transactions = 20
+
+transactions = []
+for _ in range(n_transactions):
+    transaction = random.sample(items, random.randint(1, len(items)))
+    transactions.append(transaction)
+
+print("Generated Transactions:")
+for transaction in transactions[:5]:
+    print(transaction)
+
+def eclat_low_memory(transactions, min_support):
+    item_to_transactions = defaultdict(set)
+
+    for idx, transaction in enumerate(transactions):
+        for item in transaction:
+            item_to_transactions[item].add(idx)
+
+    frequent_itemsets = []
+    for item, trans_ids in item_to_transactions.items():
+        if len(trans_ids) >= min_support:
+            frequent_itemsets.append((frozenset([item]), trans_ids))
+
+    result = []
+    k = 2
+    while frequent_itemsets:
+        next_itemsets = []
+        for i in range(len(frequent_itemsets)):
+            for j in range(i + 1, len(frequent_itemsets)):
+                itemset1, trans_ids1 = frequent_itemsets[i]
+                itemset2, trans_ids2 = frequent_itemsets[j]
+
+                new_itemset = itemset1.union(itemset2)
+                if len(new_itemset) == k:
+                    new_trans_ids = trans_ids1.intersection(trans_ids2)
+                    if len(new_trans_ids) >= min_support:
+                        next_itemsets.append((new_itemset, new_trans_ids))
+
+        result.extend(next_itemsets)
+        frequent_itemsets = next_itemsets
+        k += 1
+
+    return result
+
+min_support = 5
+
+frequent_itemsets = eclat_low_memory(transactions, min_support)
+
+print("\nFrequent Itemsets (min_support={}):".format(min_support))
+for itemset, trans_ids in frequent_itemsets:
+    print(f"{set(itemset)}: {len(trans_ids)} transactions")
